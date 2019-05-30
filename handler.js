@@ -1,9 +1,16 @@
 'use strict';
 
+let qs = require('querystring');
+var number;
+
 module.exports.hello = async (event) => {
-  let requestBody = event.body;
-  let firstSlice = requestBody.substring(requestBody.indexOf('Body=') + 5);
-  let number = firstSlice.substring(0, firstSlice.indexOf('&'));
+  let post = qs.parse(event.body);
+  if (post.Body === 'log') {
+    console.log('presaved: ' + number);
+  } else {
+    number = post.Body;
+    console.log('saved: ' + number);
+  }
 
   return {
     statusCode: 200,
