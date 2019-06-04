@@ -1,25 +1,53 @@
 'use strict';
 
-let qs = require('querystring');
-var number;
+const qs = require('querystring');
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const twilioNumber = process.env.TWILIO_NUMBER;
 
-module.exports.hello = async (event) => {
+const twilio = require('twilio');
+const client = new twilio(accountSid, authToken);
+
+module.exports.smsReceived = async (event) => {
   let post = qs.parse(event.body);
-  if (post.Body === 'log') {
-    console.log('presaved: ' + number);
-  } else {
-    number = post.Body;
-    console.log('saved: ' + number);
-  }
+  let toNumber = post.Body;
+  let userNumber = post.From;
+
+  let host = event.headers.Host;
+  let path = event.requestContext.path;
+  let callbackUrl = `https://${host}${path.replace('smsreceived', 'twiliocallback')}/${toNumber}`;
+
+  console.log(`connect user with number ${userNumber} to ${toNumber}`);
+
+  await client.calls
+      .create({
+         url: callbackUrl,
+         to: userNumber,
+         from: twilioNumber
+       })
+      .then(call => console.log(`Twilio call ID: ${call.sid}`));
 
   return {
     statusCode: 200,
-    body: JSON.stringify({
-      message: 'Go Serverless v1.0! Your function executed successfully!',
-      input: event,
-    }, null, 2),
+    headers: {
+      'Content-Type': 'text/xml'
+    }
   };
+};
 
-  // Use this code if you don't use the http event with the LAMBDA-PROXY integration
-  // return { message: 'Go Serverless v1.0! Your function executed successfully!', event };
+module.exports.twilioCallback = async (event) => {
+  let post = qs.parse(event.body);
+  let number = event.pathParameters.number;
+
+  const response = new twilio.twiml.VoiceResponse();
+  response.dial(number);
+  console.log(`connected to user, now dialing ${number}`);
+
+  return {
+    statusCode: 200,
+    headers: {
+      'Content-Type': 'text/xml'
+    },
+    body: response.toString()
+  };
 };

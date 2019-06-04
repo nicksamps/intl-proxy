@@ -11,9 +11,7 @@
 #
 # Happy Coding!
 
-service: aws-nodejs # NOTE: update this with your service name
-#app: your-app-name
-#tenant: your-tenant-name
+service: intl-proxy
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -22,6 +20,10 @@ service: aws-nodejs # NOTE: update this with your service name
 provider:
   name: aws
   runtime: nodejs10.x
+  environment:
+    TWILIO_ACCOUNT_SID: ${file(./keys.yml):TWILIO_ACCOUNT_SID}
+    TWILIO_AUTH_TOKEN: ${file(./keys.yml):TWILIO_AUTH_TOKEN}
+    TWILIO_NUMBER: ${file(./keys.yml):TWILIO_NUMBER}
 
 # you can overwrite defaults here
 #  stage: dev
@@ -57,12 +59,22 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  hello:
-    handler: handler.hello
+  smsReceived:
+    handler: handler.smsReceived
     events:
       - http:
-          path: savenumber
+          path: smsreceived
           method: post
+  twilioCallback:
+    handler: handler.twilioCallback
+    events:
+      - http:
+          path: twiliocallback/{number}
+          method: post
+          request:
+            parameters:
+              paths:
+                number: true
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
