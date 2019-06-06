@@ -3,11 +3,12 @@ service: intl-proxy
 provider:
   name: aws
   runtime: nodejs10.x
+  stage: ${opt:stage, 'dev'}
   environment:
-    ACCEPTED_USER_NUMBERS: ${file(./keys.yml):ACCEPTED_USER_NUMBERS}
-    TWILIO_ACCOUNT_SID: ${file(./keys.yml):TWILIO_ACCOUNT_SID}
-    TWILIO_AUTH_TOKEN: ${file(./keys.yml):TWILIO_AUTH_TOKEN}
-    TWILIO_NUMBER: ${file(./keys.yml):TWILIO_NUMBER}
+    ACCEPTED_USER_NUMBERS: ${file(./keys.${self:provider.stage}.yml):ACCEPTED_USER_NUMBERS}
+    TWILIO_ACCOUNT_SID: ${file(./keys.${self:provider.stage}.yml):TWILIO_ACCOUNT_SID}
+    TWILIO_AUTH_TOKEN: ${file(./keys.${self:provider.stage}.yml):TWILIO_AUTH_TOKEN}
+    TWILIO_NUMBER: ${file(./keys.${self:provider.stage}.yml):TWILIO_NUMBER}
 
 functions:
   smsReceived:
@@ -26,3 +27,6 @@ functions:
             parameters:
               paths:
                 number: true
+
+plugins:
+  - serverless-mocha-plugin
