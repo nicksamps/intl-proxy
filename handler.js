@@ -4,6 +4,7 @@ const qs = require('querystring');
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioNumber = process.env.TWILIO_NUMBER;
+const accepted_user_numbers = process.env.ACCEPTED_USER_NUMBERS.split(',');
 
 const twilio = require('twilio');
 const client = new twilio(accountSid, authToken);
@@ -17,15 +18,18 @@ module.exports.smsReceived = async (event) => {
   let path = event.requestContext.path;
   let callbackUrl = `https://${host}${path.replace('smsreceived', 'twiliocallback')}/${toNumber}`;
 
-  console.log(`connect user with number ${userNumber} to ${toNumber}`);
-
-  await client.calls
-      .create({
-         url: callbackUrl,
-         to: userNumber,
-         from: twilioNumber
-       })
-      .then(call => console.log(`Twilio call ID: ${call.sid}`));
+  if (accepted_user_numbers.indexOf(userNumber) > -1) {
+    console.log(`connect user with number ${userNumber} to ${toNumber}`);
+    await client.calls
+        .create({
+           url: callbackUrl,
+           to: userNumber,
+           from: twilioNumber
+         })
+        .then(call => console.log(`Twilio call ID: ${call.sid}`));
+  } else {
+    console.log(`Invalid user number: ${userNumber}`);
+  }
 
   return {
     statusCode: 200,
