@@ -7,7 +7,7 @@ const twilio = require('twilio');
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 const twilioNumber = process.env.TWILIO_NUMBER;
-const accepted_user_numbers = process.env.ACCEPTED_USER_NUMBERS.split(',');
+const acceptedUserNumbers = process.env.ACCEPTED_USER_NUMBERS.split(',');
 
 module.exports.smsReceived = async (event) => {
   let post = qs.parse(event.body);
@@ -20,7 +20,7 @@ module.exports.smsReceived = async (event) => {
 
   let client = helpers.getTwilioClient(accountSid, authToken);
 
-  if (accepted_user_numbers.indexOf(userNumber) > -1) {
+  if (acceptedUserNumbers.indexOf(userNumber) > -1) {
     console.log(`connect user with number ${userNumber} to ${toNumber}`);
     await client.calls
         .create({
